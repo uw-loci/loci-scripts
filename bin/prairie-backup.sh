@@ -15,10 +15,19 @@
 
 scriptDir="$(dirname "$0")"
 
-if [ "$*" == "" ];
+baseDir="$1"
+tiffDest="$2"
+zipDest="$3"
+if [ "$baseDir" == "" -o "$tiffDest" == "" -o "$zipDest" == "" ];
 then
-  echo "Usage: prairie-backup.sh baseDirectory [anotherBaseDirectory ...]"
+  echo "Usage: prairie-backup.sh baseDirectory tiffDestination zipDestination"
   exit 1
+fi
+
+if [ ! -e "$baseDir" ];
+then
+  echo "Base directory '$baseDir' does not exist!"
+  exit 2
 fi
 
 bioFormats="$scriptDir/loci_tools.jar"
@@ -28,16 +37,31 @@ then
   echo "    http://loci.wisc.edu/bio-formats/downloads"
   echo
   echo "And place it in the same directory as this script."
-  exit 2
+  exit 3
 fi
 
 # exit if anything goes wrong!
 set -e
 
+# create destination folders, if they do not exist already
+if [ ! -e "$tiffDest" ];
+then
+  mkdir -p "$tiffDest"
+fi
+if [ ! -e "$zipDest" ];
+then
+  mkdir -p "$zipDest"
+fi
+
+# ensure all paths are absolute
+baseDir=$(cd "$baseDir" && pwd)
+tiffDest=$(cd "$tiffDest" && pwd)
+zipDest=$(cd "$zipDest" && pwd)
+
 # search for XML files (which are assumed to indicate Prairie datasets)
 IFS='\
 '
-for xmlFile in `find "$@" -name '*.xml'`
+for xmlFile in `find "$baseDir" -name '*.xml'`
 do
   # datasetDir is the folder containing the XML file
   datasetDir="$(dirname "$xmlFile")"
@@ -45,22 +69,34 @@ do
   # datasetBase is the datasetDir's parent folder
   datasetBase="$(dirname "$datasetDir")"
 
-  # datasetName is the name of the Prairie dataset (i.e., its folder name)
-  datasetName="$(basename "$datasetDir")"
+  # datasetSuffix is the dataset's path fragment after the base directory
+  datasetSuffix="${datasetBase#$baseDir}"
 
-  # convert Prairie dataset to OME-TIFF
+  # datasetName is the name of the Prairie dataset (from its folder)
+  datasetName="$(basename "$datasetDir")"
+  datasetFullName="$datasetSuffix$datasetName"
+
+  # omeTiffPath is the path to the converted OME-TIFF file
+  omeTiffDir="$tiffDest$datasetSuffix"
+  omeTiffPath="$omeTiffDir/$datasetName.ome.tif"
+
+  # zipPath is the path to the compressed ZIP archive
+  zipDir="$zipDest$datasetSuffix"
+  zipPath="$zipDir/$datasetName.zip"
+
+  # convert Prairie dataset to compressed OME-TIFF
   echo
-  echo "Converting '$xmlFile' to OME-TIFF..."
-  omeTiff="$datasetName.ome.tif"
-  if [ -e "$omeTiff" ];
+  echo "Converting '$datasetFullName' to OME-TIFF..."
+  if [ -e "$omeTiffPath" ];
   then
     # OME-TIFF file already exists; skip this dataset
     echo "OME-TIFF file already exists. Moving on..."
     continue
   fi
   set +e
+  mkdir -p "$omeTiffDir"
   java -cp "$scriptDir/loci_tools.jar" loci.formats.tools.ImageConverter \
-    -compression LZW "$xmlFile" "$omeTiff" > /dev/null
+    -compression LZW "$xmlFile" "$omeTiffPath" > /dev/null
   if [ $? -gt 0 ]; then
     # something went wrong; skip this dataset
     echo "Error converting. Moving on..."
@@ -70,18 +106,18 @@ do
 
   # compress Prairie dataset to ZIP file
   echo
-  echo "Compressing '$datasetDir' to ZIP..."
-  zipFile="$datasetName.zip"
-  if [ -e "$zipFile" ];
+  echo "Compressing '$datasetFullName' to ZIP..."
+  if [ -e "$zipPath" ];
   then
     # ZIP file already exists; skip this dataset
     echo "ZIP file already exists. Moving on..."
     continue
   fi
-  (cd "$datasetBase" && zip -r9 "$datasetName.zip" "$datasetDir" > /dev/null)
+  mkdir -p "${zipDir:-1}"
+  (cd "$datasetBase" && zip -r9 "$zipPath" "$datasetName" > /dev/null)
 
   # delete uncompressed Prairie dataset
   echo
-  echo "Deleting '$datasetName'..."
+  echo "Deleting '$datasetFullName'..."
   rm -rf "$datasetDir"
 done
