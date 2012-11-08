@@ -117,7 +117,7 @@ do
     echo "ZIP file already exists. Moving on..."
     continue
   fi
-  mkdir -p "${zipDir:-1}"
+  mkdir -p "$zipDir"
   (cd "$datasetBase" && zip -r9 "$zipPath" "$datasetName" > /dev/null)
 
   # delete uncompressed Prairie dataset
