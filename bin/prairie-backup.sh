@@ -98,7 +98,8 @@ do
   fi
   set +e
   mkdir -p "$omeTiffDir"
-  java -cp "$scriptDir/loci_tools.jar" loci.formats.tools.ImageConverter \
+  java -Xmx2g -cp "$scriptDir/loci_tools.jar" \
+    loci.formats.tools.ImageConverter \
     -compression LZW "$xmlFile" "$omeTiffPath" > /dev/null
   if [ $? -gt 0 ]; then
     # something went wrong; skip this dataset
