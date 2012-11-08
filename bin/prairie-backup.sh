@@ -11,6 +11,9 @@
 # It will save space, especially if the ZIP files are then migrated to an
 # external backup server.
 
+# Execute the script with a command like:
+#   ./prairie-backup.sh ~/MyData ~/MyTIFFs ~/MyZIPs
+
 # Author: Curtis Rueden
 
 scriptDir="$(dirname "$0")"
