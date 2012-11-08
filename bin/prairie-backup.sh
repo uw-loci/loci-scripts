@@ -13,7 +13,7 @@
 
 # Author: Curtis Rueden
 
-baseDir="$(dirname "$0")"
+scriptDir="$(dirname "$0")"
 
 if [ "$*" == "" ];
 then
@@ -21,7 +21,7 @@ then
   exit 1
 fi
 
-bioFormats="$baseDir/loci_tools.jar"
+bioFormats="$scriptDir/loci_tools.jar"
 if [ ! -e "$bioFormats" ];
 then
   echo "Please download Bio-Formats (loci_tools.jar) from:"
@@ -59,7 +59,7 @@ do
     continue
   fi
   set +e
-  java -cp "$baseDir/loci_tools.jar" loci.formats.tools.ImageConverter \
+  java -cp "$scriptDir/loci_tools.jar" loci.formats.tools.ImageConverter \
     -compression LZW "$xmlFile" "$omeTiff" > /dev/null
   if [ $? -gt 0 ]; then
     # something went wrong; skip this dataset
