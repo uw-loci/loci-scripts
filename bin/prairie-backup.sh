@@ -117,6 +117,7 @@ do
     echo "ZIP file already exists. Moving on..."
     continue
   fi
+  # make the directory
   mkdir -p "${zipDir:-1}"
   (cd "$datasetBase" && zip -r9 "$zipPath" "$datasetName" > /dev/null)
 
