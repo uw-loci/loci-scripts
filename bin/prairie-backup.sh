@@ -33,10 +33,10 @@ then
   exit 2
 fi
 
-bioFormats="$scriptDir/loci_tools.jar"
+bioFormats="$scriptDir/bioformats_package.jar"
 if [ ! -e "$bioFormats" ];
 then
-  echo "Please download Bio-Formats (loci_tools.jar) from:"
+  echo "Please download Bio-Formats (bioformats_package.jar) from:"
   echo "    http://loci.wisc.edu/bio-formats/downloads"
   echo
   echo "And place it in the same directory as this script."
@@ -98,7 +98,7 @@ do
   fi
   set +e
   mkdir -p "$omeTiffDir"
-  java -Xmx2g -cp "$scriptDir/loci_tools.jar" \
+  java -Xmx2g -cp "$scriptDir/bioformats_package.jar" \
     loci.formats.tools.ImageConverter \
     -compression LZW "$xmlFile" "$omeTiffPath" > /dev/null
   if [ $? -gt 0 ]; then
